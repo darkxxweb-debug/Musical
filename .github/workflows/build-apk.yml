@@ -29,10 +29,26 @@ jobs:
       # Tunajenga na wakati huo huo tunahifadhi log yote kwenye build_log.txt
       # continue-on-error: true -> ili step zinazofuata ziweze kuangalia matokeo
       # (imefanikiwa au imeshindwa) badala ya workflow kusimama papo hapo.
+      - name: Onyesha muundo wa folder (uchunguzi)
+        run: |
+          echo "### 📂 Muundo wa repo (ngazi 3 za juu):"
+          find . -maxdepth 3 -not -path "*/.git*" | sort
+
       - name: Jenga APK
         id: gradle_build
         run: gradle assembleDebug --stacktrace 2>&1 | tee build_log.txt
         continue-on-error: true
+
+      - name: Uchunguzi kamili baada ya build (inaendeshwa kila wakati)
+        if: always()
+        run: |
+          echo "### 🔎 Matokeo ya assembleDebug - hali: ${{ steps.gradle_build.outcome }}"
+          echo "--- Folder ya app/build/outputs (kama ipo) ---"
+          find . -type d -iname "outputs" -not -path "*/.git*" 2>/dev/null
+          echo "--- Faili zote za .apk popote kwenye repo ---"
+          find . -iname "*.apk" -not -path "*/.git*" 2>/dev/null || echo "(hakuna .apk yoyote ilipatikana)"
+          echo "--- Mistari 40 ya mwisho ya build_log.txt ---"
+          tail -n 40 build_log.txt || echo "(hakuna build_log.txt)"
 
       # ============ IKIWA IMESHINDWA (ERROR) ============
       - name: Onyesha muhtasari wa ERROR kwenye ukurasa wa Summary
