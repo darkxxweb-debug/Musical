@@ -68,11 +68,29 @@ jobs:
         if: steps.gradle_build.outcome == 'success'
         run: echo "## ✅ Ujenzi umefanikiwa - APK iko tayari hapo chini" >> $GITHUB_STEP_SUMMARY
 
-      # Tunapakia APK PEKEE endapo build imefanikiwa
+      # Tunatafuta APK popote ilipo kwenye repo (badala ya path moja tu maalum),
+      # kisha tunaandika njia halisi kwenye Summary - hii inasaidia endapo siku
+      # fulani muundo wa folder utabadilika (mf. project ikiwa ndani ya subfolder).
+      - name: Tafuta APK ilipo (uchunguzi)
+        if: steps.gradle_build.outcome == 'success'
+        id: find_apk
+        run: |
+          echo "### 🔎 APK zilizopatikana:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          find . -path "*/outputs/apk/*" -name "*.apk" | tee found_apks.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          if [ ! -s found_apks.txt ]; then
+            echo "⚠️ Hakuna faili la .apk lililopatikana popote. Angalia log ya 'Jenga APK' hapo juu." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      # Tunapakia APK PEKEE endapo build imefanikiwa - glob ya "**" inatafuta
+      # kwenye ngazi zote za folder, si njia moja tu maalum
       - name: Pakia APK (kama imefanikiwa)
         if: steps.gradle_build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: |
+            **/outputs/apk/**/*.apk
+          if-no-files-found: warn
           retention-days: 30
